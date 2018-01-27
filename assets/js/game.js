@@ -7,50 +7,76 @@ export default function run_game(root) {
 };
 
 const Tile = ({value, complete, onClick, show}) =>
-  (<button className={"tile"} onClick={onClick}>
+  (<button className={"tile " + (complete ? "bg-success" : "")} onClick={onClick}>
     {complete || show ? value : ' '}
   </button>);
 
-const Board = ({tiles, onClick}) =>
-  (<div className={"board"}>
-    <div className={"board-row"}>
-      <Tile
-        {...tiles[0]}
-        onClick={() => onClick(0)} />
-      <Tile
-        {...tiles[1]}
-        onClick={() => onClick(1)} />
-    </div>
-    <div className={"board-row"}>
-      <Tile
-        {...tiles[2]}
-        onClick={() => onClick(2)} />
-      <Tile
-        {...tiles[3]}
-        onClick={() => onClick(3)} />
-    </div>
-  </div>);
+const Board = ({tiles, onClick}) => {
+
+  const disp = [];
+
+  for (let i = 0; i < tiles.length; i++) {
+    disp.push(<Tile key={i} className={"col"}
+                {...tiles[i]}
+                onClick={() => onClick(i)} />);
+    if (i % 4 == 3)
+      disp.push(<div key={"b"+i} className={"w-100"}></div>);
+  }
+
+  return (<div className={"board"}>
+            <div className={"row"}>
+              {disp}
+            </div>
+          </div>);
+};
+
 
 class Game extends Component {
   constructor(props) {
     super(props);
+
+    const tiles = this.genTiles();
+
     // state[object] : {tiles: array[tile], count: integer, lastIndex: integer}
     // tile[object] : {value: string, complete: boolean}
     this.state = {
-      tiles: [
-        {value: 'A', complete: false, show: false},
-        {value: 'B', complete: false, show: false},
-        {value: 'A', complete: false, show: false},
-        {value: 'B', complete: false, show: false}
-      ],
+      tiles,
       valid: true, // if the click happends in invalid time, no response
       lastIndex: -1, // last try index
       count: 0, // the times of try
-      score: 0, //
+      clicks: 0, // clicks
       status: false // game state
     }
 
     this.handleClick = this.handleClick.bind(this);
+  }
+
+  restart = () => {
+    const tiles = this.genTiles();
+
+    this.setState(
+      {
+        tiles,
+        valid: true, // if the click happends in invalid time, no response
+        lastIndex: -1, // last try index
+        count: 0, // the times of try
+        clicks: 0,
+        status: false // game state
+      }
+    );
+  }
+
+  // return : array[tile]
+  genTiles = () => {
+    let alps = _.range(8);
+    alps = alps.concat(alps);
+    alps = _.shuffle(alps);
+    return alps.map(
+        i => ({
+          value: String.fromCharCode('A'.charCodeAt(0)+i),
+          complete: false,
+          show: false
+      }));
   }
 
   handleClick(i) {
@@ -58,7 +84,7 @@ class Game extends Component {
     console.log(i);
 
 
-    let {tiles, lastIndex, valid, count} = this.state;
+    let {tiles, lastIndex, valid, count, clicks} = this.state;
     if (tiles[i].complete) return; // already complete
 
     if (!valid) return; // invalid time Click
@@ -67,7 +93,8 @@ class Game extends Component {
     if (count === 0) { // first try
       const lastIndex = i;
       curTiles[i].show = true;
-      this.setState({...this.state, tiles:curTiles, lastIndex: i, count: 1});
+      clicks += 1;
+      this.setState({...this.state, tiles:curTiles, lastIndex: i, clicks, count: 1});
 
     } else { // second try
       if (lastIndex === i) return; // try the same tile
@@ -81,7 +108,8 @@ class Game extends Component {
         curTiles[i].complete = true;
         curTiles[i].show = true;
         status = curTiles.every(tile => tile.complete);
-        this.setState({...this.state, tiles: curTiles, status, count: 0});
+        clicks += 1;
+        this.setState({...this.state, tiles: curTiles, status, clicks, count: 0});
 
       } else {
         // mismatch
@@ -89,7 +117,8 @@ class Game extends Component {
         // 2. invalidate the whole game for 1s
         // 3. after 1s hide both tiles and validate the game
         curTiles[i].show = true;
-        this.setState({...this.state, tiles: curTiles, valid: false, count: 0});
+        clicks += 1;
+        this.setState({...this.state, tiles: curTiles, valid: false, count: 0, clicks});
 
         // after 1s
         setTimeout(() => {
@@ -106,7 +135,18 @@ class Game extends Component {
 
   render() {
     return (
-      <Board tiles={this.state.tiles} onClick ={this.handleClick} />
+      <div>
+        <Board tiles={this.state.tiles} onClick ={this.handleClick} />
+        <div>
+          <div>Clicks : {this.state.clicks}</div>
+          <div>
+            Score : {Math.round(1600/this.state.clicks)}
+          </div>
+        </div>
+        <button type="button" className={"btn btn-primary"} onClick={this.restart}>
+          {"Restart"}
+        </button>
+      </div>
     );
   }
 }

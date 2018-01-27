@@ -6,6 +6,8 @@ export default function run_demo(root) {
   ReactDOM.render(<Demo side={0}/>, root);
 }
 
+const Ele = () => <div>Hello World</div>;
+
 class Demo extends React.Component {
   constructor(props) {
     super(props);
@@ -25,6 +27,7 @@ class Demo extends React.Component {
         <div className="col">
           &nbsp;
         </div>
+        <Ele />
         <Side show={this.state.side == 1} toggle={toggle} />
       </div>
     );
@@ -47,4 +50,3 @@ function Side(params) {
     );
   }
 }
-
