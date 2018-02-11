@@ -12,6 +12,7 @@
 // If you no longer want to use a dependency, remember
 // to also remove its path from "config.paths.watched".
 import "phoenix_html";
+import socket from "./socket";
 
 // Import local files
 //
@@ -20,15 +21,34 @@ import "phoenix_html";
 
 // import socket from "./socket"
 
-import run_demo from "./demo";
 import run_game from "./game";
+
+function form_init() {
+  $('#game-input').keypress((e) => {
+    if (e.keyCode==13) $('#game-button').click();
+  });
+
+  $('#game-button').click(() => {
+    console.log("game button clicked");
+    let gameName = $('#game-input').val();
+    window.location.href="/game/"+gameName;
+  });
+}
 
 // value: string, complete: boolean, onClick: function
 
 function init() {
-  let root = document.getElementById('game');
-  //run_demo(root);
-  run_game(root);
+  let root = document.getElementById('root');
+  if (root) {
+    let gameName = window.location.href.substr(this.location.href.lastIndexOf('/')+1);
+    let channel = socket.channel("games:"+gameName, {});
+
+    run_game(root, channel);
+  }
+
+  if (document.getElementById('index-page')) {
+    form_init();
+  }
 }
 
 
