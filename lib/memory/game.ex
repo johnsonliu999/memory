@@ -1,6 +1,6 @@
 defmodule Memory.Game do
   def new do
-      tiles = "AABBCCDDEEDDFFHH"
+      tiles = "AABBCCDDEEFFGGHH"
         |> String.graphemes
         |> Enum.shuffle
         |> Enum.map(&(%{"value" => &1, "complete" => false}))
